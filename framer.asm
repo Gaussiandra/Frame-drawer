@@ -64,6 +64,7 @@ start:
 
             mov dx, Y2 - Y1
             mov cx, X2 - X1
+            mov bx, offset frameName
             call drawFrame
 
 exit:
@@ -75,8 +76,9 @@ exit:
 ; Entry: DX - number of lines
 ;        CX - middle line length
 ;        DI - drawing addr
-;        SI - drawing style
-; Destr: AX, CX, DX, DI, SI
+;        BX - addr of frame name
+;        SI - drawing style addr
+; Destr: AX, CX, DX, DI, SI, BX
 ; Note:  ES - videosegment
 ;        DF = 0
 ;-----------------------------
@@ -84,9 +86,11 @@ drawFrame   proc
             call drawLine
             add si, 3                   ; points to middle top style
             
+            ; print string on the frame
             push si
+            push bx
             mov bl, [si]
-            mov si, offset frameName
+            pop si
             add cx, 2
             call printString
             sub cx, 2
@@ -134,7 +138,6 @@ printString proc
             add di, cx
             sub di, ax                  ; name position on the frame
             sub di, 2
-
             or di, 1                    ; make videoseg filling correct
 
             ; mov string on the line
@@ -232,7 +235,3 @@ cringeStyle:  db '+', CYAN,  196, BROWN, '+', RED
               db '+', BLUE,  196, RED,   '+', MAGENTA, '$'
 
 end start
-; убрать магические константы, проверить описания, общую логичность и подпилить всё
-; проверить передачу аргументов
-; выводить надпись только, если влезает
-; анимация

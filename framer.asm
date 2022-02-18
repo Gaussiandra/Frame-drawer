@@ -59,13 +59,40 @@ start:
             mov ax, VIDEOSEG
             mov es, ax
 
+            xor ax, ax                  ; x_length of frame -> X2-X1
+@@animate:
+            push ax
+
+            mov bx, (X2 - X1) * 2       ; bx - x coord to draw frame
+            sub bx, ax
+            shr bx, 1                   ; 0.5 * (X2 - X1 - x_length)
+
+            ; fix text position with respect to bx
+            push ax
+            and ax, 1
+            add bx, ax
+            pop ax
+
             xor di, di
-            mov di, (CMD_WIDTH * Y1 + X1) * 2
+            mov di, CMD_WIDTH * Y1
+            add di, bx
+            shl di, 1
 
             mov dx, Y2 - Y1
-            mov cx, X2 - X1
+            mov cx, ax
+            push bx
+            push si
             mov bx, offset frameName
             call drawFrame
+            pop si
+            pop bx
+            
+            call sleep
+
+            pop ax
+            inc ax
+            cmp ax, X2 - X1
+            jne @@animate
 
 exit:
             mov ax, 4ch
@@ -216,6 +243,28 @@ strlen      proc
             pop cx
 
             ret
+endp
+
+;-----------------------------
+; Wait some time...
+;-----------------------------
+sleep       proc
+
+            push ax
+            push cx
+            push dx
+
+            xor ax, ax
+            mov ah, 86h
+            xor cx, cx
+            mov dx, 0FFFh
+            int 15h
+
+            pop dx
+            pop cx
+            pop ax
+
+            ret 
 endp
 
 .data
